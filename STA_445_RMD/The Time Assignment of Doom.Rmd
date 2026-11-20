@@ -1,0 +1,147 @@
+---
+title: "Assignment 5 of TIME"
+author: "Carter Heenan"
+date: "2026-10-19"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+## Exercises  {#Exercises_Dates}
+
+### Exercise 1 {-}
+
+Convert the following to date or date/time objects.
+
+**a)** September 13, 2010.
+```{r}
+mdy('September 13, 2010')
+```
+
+**b)** Sept 13, 2010.
+```{r}
+mdy('sept 13, 2010')
+```
+# Unfortunately, sept is one abbreviated letter past R's 3 letter limit.
+
+**c)** Sep 13, 2010.
+```{r}
+mdy('sep 13, 2010')
+```
+
+**d)** S 13, 2010. Comment on the month abbreviation needs.
+```{r}
+mdy('S 13, 2010')
+```
+# S is too abbreviated for R, its simply too powerful to understand the letter S.
+
+**e)** 07-Dec-1941.
+```{r}
+dmy('07-Dec-1941')
+```
+
+**f)** 1-5-1998. Comment on why you might be wrong.
+```{r}
+dmy('1-5-1998')
+```
+ # Unfortunately both 1 and 5 are usable months. Meaning we don't really know which one is the month and whats the day.
+ 
+**g)** 21-5-1998. Comment on why you know you are correct.
+```{r}
+dmy('21-5-1998')
+```
+# Well obviously were in Made-up-Tember, my third cousin was born one the 3rd! I see 0 issues with this!
+
+**h)** 2020-May-5 10:30 am
+```{r}
+ymd_hm('2020-May-5 10:30 am')
+```
+
+**i)** 2020-May-5 10:30 am PDT (ex Seattle)
+```{r}
+data.frame(date='2020-May-5', zone='PDT') %>%
+  rowwise() %>%
+  mutate(date = ymd_hm('2020-May-5 10:30 am', tz='US/Pacific'))
+```
+
+**j)** 2020-May-5 10:30 am AST (ex Puerto Rico)
+```{r}
+data.frame(date='2020-May-5', zone='AST') %>%
+  rowwise() %>%
+  mutate(date = ymd_hm('2020-May-5 10:30 am', tz='America/Puerto_Rico'))
+```
+
+### Exercise 3 {-}
+
+Suppose you have arranged for a phone call to be at 3 pm on May 8, 2025 at Arizona time. However, the recipient will be in Auckland, NZ. What time will it be there? 
+```{r}
+ArizonaTime <- mdy_hms('May 8 2025 15:00:00', tz = 'America/Phoenix')
+AucklandTime <- with_tz(ArizonaTime, tz = 'Pacific/Auckland')
+
+AucklandTime
+```
+
+### Exercise 4 {-}
+
+From this book's [GitHub](https://github.com/BuscagliaR/STA_444_v2/) directory, navigate to the `data-raw` directory and then download the `Pulliam_Airport_Weather_Station.csv` data file. (*There are several weather station files. Make sure you get the correct one!*)  There is a `DATE` column (is it of type `date` when you import the data?) as well as the Maximum and Minimum temperature. For the last 5 years of data included in the file, plot the time series of daily maximum temperature with date on the x-axis. Write your code so that it will work if I update the date set. *Hint: Find the maximum date in the data set and then subtract 5 years. Will there be a difference if you use `dyears(5)` vs `years(5)`? Which seems more appropriate here?*
+```{r}
+Weather_Report <- read.csv('data.RAW/Pulliam_Airport_Weather_Station.csv')
+
+weather <- Weather_Report %>%
+  mutate(DATE = as.Date(DATE))
+max_date <- max(weather$DATE, na.rm = TRUE)
+start_date <- max_date - years(5)
+weather_5yr <- weather %>%
+  filter(DATE >= start_date)
+ggplot(weather_5yr, aes(x = DATE, y = TMAX)) +
+  geom_line() +
+  labs(
+    title = "Daily Maximum Temperature at Pulliam Airport",
+    x = "Date",
+    y = "Maximum Temperature"
+  ) 
+```
+# dyears(5) is just a more complicated way of getting the 5 year estimation for the graph. years(5) just references the calendar years. And its best used for this problem because R has a habit of hating me and making my coding difficult if I try and do anything complicated.
+
+### Exercise 5 {-}
+
+It turns out there is some interesting periodicity regarding the number of births on particular days of the year.
+
+**a)** Using the `mosaicData` package, load the data set `Births78` which records the number of children born on each day in the United States in 1978. Because this problem is intended to show how to calculate the information using the `date`, remove all the columns *except* `date` and `births`.
+```{r}
+library(mosaicData)
+data("Births78")
+DB78 <- Births78[, c('date', 'births')]
+```
+
+**b)** Graph the number of `births` vs the `date` with date on the x-axis. What stands out to you? Why do you think we have this trend?
+```{r}
+ggplot(DB78) + geom_line( aes(x= date, y= births)) + labs( title = 'Births per day',x = 'date', y='number of births' )
+```
+# its pretty strange to me? It keeps bouncing up and down showing hotspots and low spots throughout the month. It could mean that on average maybe fridays are busier birthdays then mondays.
+
+**c)** To test your assumption, we need to figure out the what day of the week each observation is. Use `dplyr::mutate` to add a new column named `dow` that is the day of the week (Monday, Tuesday, etc). This calculation will involve some function in the `lubridate` package and the `date` column.
+```{r}
+DB782 <- DB78 %>% 
+mutate( date = as.Date(date), 
+WeekDay = wday(date, label = TRUE, abbr = FALSE)
+)
+
+head(DB782)
+```
+
+**d)** Plot the data with the point color being determined by the day of the week variable.
+```{r}
+ggplot(DB782) +
+  geom_point(aes(x = date, y = births, color = WeekDay)) +
+  labs(
+    title = "Babies per Day 1978 Color",
+    x = "Date",
+    y = "Number of Births",
+    color = "WeekDay") 
+```

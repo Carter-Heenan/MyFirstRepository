@@ -1,0 +1,37 @@
+---
+title: "Assignment 2 part 2"
+author: "Carter Heenan"
+date: "2026-10-09"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(readxl)
+```
+
+Exercise 1
+Download from GitHub the data file by clicking on this link: Example_5.xls. Open it in Excel and figure out which sheet of data we should import into R. At the same time figure out how many initial rows need to be skipped. Import the data set into a data frame and show the structure of the imported data using the str() command. Make sure that your data has n=31
+observations and the three columns are appropriately named. If you make any modifications to the data file, comment on those modifications.
+
+```{r}
+excel_sheets("data.RAW/example_5.xls")
+Example5cooler <- read_excel("data.RAW/Example_5.xls", sheet = 2, skip = 4)
+str(Example5cooler)
+```
+### I made no changes to the data, I just cut out the unnecessary data and displayed it.
+
+Exercise 2
+Download from GitHub the data file by clicking on this link: Example_3.xls. Import the data set into a data frame and show the structure of the imported data using the tail() command which shows the last few rows of a data table. Make sure the Tesla values are NA where appropriate and that both -9999 and NA are imported as NA values. If you make any modifications to the data file, comment on those modifications.
+
+```{r}
+Example3cooler <- read_excel("data.RAW/Example_3.xls", na = c("NA", "-9999"), sheet = 2)
+tail(Example3cooler)
+str(Example3cooler)
+colSums(is.na(Example3cooler))
+```
+ ### File was not modified at all. Data can be viewed through the R console.

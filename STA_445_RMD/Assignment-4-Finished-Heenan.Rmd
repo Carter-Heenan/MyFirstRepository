@@ -1,0 +1,191 @@
+---
+title: "Assignment 4 Coding Heenan"
+author: "Carter Heenan"
+date: "2026-10-14"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+library(stringr)
+```
+
+### Exercise 1 {-}
+
+For the following regular expression, explain in words what it matches on. Then add test strings to demonstrate that it in fact does match on the pattern you claim it does. Make sure that your test set of strings has several examples that match as well as several that do not. Show at least two examples that return TRUE and two examples that return FALSE. *If you copy the Rmarkdown code for these exercises directly from my source pages, make sure to remove the `eval=FALSE` from the R-chunk headers.*
+
+Here is an example of what a solution might look like.
+
+**q)** This regular expression matches: 
+
+Any string that contains the lower-case letter "a".
+
+``` {R}
+strings <- c('Adel', 'Mathematics', 'able', 'cheese')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, 'a') )
+```
+
+Please complete the questions below.
+
+**a)** This regular expression matches: 'ab'
+
+# It matches the string with words containing ab in it. As long as its in it, it'll be true
+
+```{r}
+strings <- c('ab', 'ba', 'abcdef', 'tuberculosis')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, 'ab') )
+```
+
+**b)** This regular expression matches: [ab] 
+
+# Basically the same as above but this time it really only requires one of the letters be present. 
+
+```{r}
+strings <- c('aerodynamic', 'abbacus', 'complex', 'simple')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '[ab]') )
+```
+
+**c)** This regular expression matches:  ^[ab]
+
+# this bad boy changes the specification so it now looks for words that start with the corrosponding letters (not in order just present)
+```{r}
+strings <- c('boot', 'Chaka', 'a-shoe', 'nike')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '^[ab]') )
+```
+
+**d)** This regular expression matches:  
+
+# This complicated functions wants you to begin with a numerical digit, a 'whitespace character'(Regular space or new line) and then either a lowercase or capital A.
+
+```{r}
+strings <- c('17 a', 'a 17', '24 A', 'A 24')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '\\d+\\s[aA]') )
+```
+
+**e)** This regular expression matches: '\\d+\\s*[aA]'
+
+# Its essentially the same thing as above, but now the space between can be 0 or many spaces.
+
+```{r}
+strings <- c('12a', '12      a', 'a12', 'a       12')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '\\d+\\s*[aA]') )
+```
+
+**f)** This regular expression matches:  '.*'
+
+# This guy is weird because it kind of fails to set a parameter. The . signifies its looking for any character, while the * means zero or more repitions. So its essentially looking for 0 or more character to be present. meaning you can't really fail.
+
+```{r}
+strings <- c('a string', 'Forester', '12      a')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '.*') )
+```
+
+**g)** This regular expression matches:  '^\\w{2}bar'
+
+# Were beginning to get super specific now as this expression is telling us it must begin with two characters and then the word bar with no space. Why this would be useful Im not too sure.
+
+```{r}
+strings <- c('abbar', '12bar', 'bar12', 'xx bar')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '^\\w{2}bar') )
+```
+
+**h)** This regular expression matches:  '(foo\\.bar)|(^\\w{2}bar)') )
+
+# This expression modifies the previous expression by adding an OR and also allowing strings with foo.bar in them.
+```{r}
+strings <- c('foo.bar', 'xxbar', 'testing foo.bar', 'foo bar')
+data.frame( string = strings ) %>%
+  mutate( result = str_detect(string, '(foo\\.bar)|(^\\w{2}bar)') )
+```
+    
+### Exercise 2 {-}
+
+The following file names were used in a camera trap study. The S number represents the site, P is the plot within a site, C is the camera number within the plot, the first string of numbers is the YearMonthDay and the second string of numbers is the HourMinuteSecond.
+
+```{r}
+file.names <- c( 'S123.P2.C10_20120621_213422.jpg',
+                 'S10.P1.C1_20120622_050148.jpg',
+                 'S187.P2.C2_20120702_023501.jpg')
+```
+
+Produce a data frame with columns corresponding to the `site`, `plot`, `camera`, `year`, `month`, `day`, `hour`, `minute`, and `second` for these three file names. So we want to produce code that will create the data frame:
+
+```{r, eval=FALSE}
+ Site Plot Camera Year Month Day Hour Minute Second
+ S123   P2    C10 2012    06  21   21     34     22
+  S10   P1     C1 2012    06  22   05     01     48
+ S187   P2     C2 2012    07  02   02     35     01
+```
+```{r}
+matches <- str_match(
+  file.names,
+  '^(S\\d+)\\.(P\\d+)\\.(C\\d+)_(\\d{4})(\\d{2})(\\d{2})_(\\d{2})(\\d{2})(\\d{2})\\.jpg$'
+)
+result <- data.frame(
+  Site   = matches[, 2],
+  Plot   = matches[, 3],
+  Camera = matches[, 4],
+  Year   = matches[, 5],
+  Month  = matches[, 6],
+  Day    = matches[, 7],
+  Hour   = matches[, 8],
+  Minute = matches[, 9],
+  Second = matches[, 10]
+)
+
+result
+```
+
+### Exercise 3 {-}
+
+The full text from Lincoln's Gettysburg Address is given below. It has been provided in a form that includes lots of different types of white space. Your goal is to calculate the mean word length of Lincoln's Gettysburg Address! *Note: you may consider 'battle-field' as one word with 11 letters or as two words 'battle' and 'field'. The first option a bit more difficult and technical!*.
+
+```{r}
+Gettysburg <- 'Four score and seven years ago our fathers brought forth on this 
+continent, a new nation, conceived in Liberty, and dedicated to the proposition 
+that all men are created equal.
+
+Now we are engaged in a great civil war, testing whether that nation, or any 
+nation so conceived and so dedicated, can long endure. We are met on a great 
+battle-field of that war. We have come to dedicate a portion of that field, as 
+a final resting place for those who here gave their lives that that nation might 
+live. It is altogether fitting and proper that we should do this.
+
+But, in a larger sense, we can not dedicate -- we can not consecrate -- we can 
+not hallow -- this ground. The brave men, living and dead, who struggled here, 
+have consecrated it, far above our poor power to add or detract. The world will 
+little note, nor long remember what we say here, but it can never forget what 
+they did here. It is for us the living, rather, to be dedicated here to the 
+unfinished work which they who fought here have thus far so nobly advanced. It 
+is rather for us to be here dedicated to the great task remaining before us -- 
+that from these honored dead we take increased devotion to that cause for which 
+they gave the last full measure of devotion -- that we here highly resolve that 
+these dead shall not have died in vain -- that this nation, under God, shall 
+have a new birth of freedom -- and that government of the people, by the people, 
+for the people, shall not perish from the earth.'
+```
+```{r}
+words <- str_extract_all(
+  Gettysburg,
+  '\\b[A-Za-z]+(?:-[A-Za-z]+)?\\b'
+)[[1]]
+
+word.lengths <- str_length(
+  str_remove_all(words, '[^A-Za-z]')
+)
+mean(word.lengths)
+```
+

@@ -1,0 +1,177 @@
+---
+title: "Assignment 3 Code Heenan"
+author: "Carter Heenan"
+date: "2026-10-14"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+```
+Exercise 1.
+
+a) 
+```{r}
+duniform <- function(x, a, b) { if (x >= a && x <= b) {return(1 / (b-a)) } else { return(0)} }
+duniform(2,4,8)
+duniform(6,4,8)
+duniform(10,4,8)
+```
+
+b) Next lets improve our function to work correctly for a vector of x values. Modify your function in part (a) so that the core logic uses a for-loop statement and the loop moves through each element of x in succession. Since this is a bit more of a complex task, your function should look something like this:
+
+```{r}
+duniform <- function(x, a, b) {
+  output <- NULL
+
+  for (i in 1:length(x)) {
+    if (x[i] >= a && x[i] <= b) {
+      output[i] <- 1 / (b - a)
+    } else {
+      output[i] <- 0
+    }
+  }
+
+  return(output)
+}
+```
+
+Verify that your function works correctly by running the following code:
+```{r}
+data.frame( x=seq(-1, 12, by=.001) ) %>%
+  mutate( y = duniform(x, 4, 8) ) %>%
+  ggplot( aes(x=x, y=y) ) +
+  geom_step()
+```
+
+c) Install the R package microbenchmark. We will use this to discover the average duration (time) your function takes to execute code. Execute the following
+
+```{r}
+microbenchmark::microbenchmark( duniform( seq(-4,12,by=.0001), 4, 8), times=100)
+```
+
+
+d) 
+```{r}
+duniform <- function(x, a, b) {
+  ifelse(x >= a & x <= b, 1 / (b - a), 0)
+}
+data.frame(x = seq(-1, 12, by = 0.001)) %>%
+  mutate(y = duniform(x, 4, 8)) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_step()
+microbenchmark::microbenchmark(
+  duniform(seq(-4, 12, by = 0.0001), 4, 8),
+  times = 100
+)
+```
+
+e) Comment on Which version of your function was easier to write? Which ran faster?
+
+# The ifelse statement was easiest to write because I didn't have to space it out so much (took me so long to figure out that was the issue) and I got to skip a step. It was also the fastest for me 
+
+Exercise 2
+
+
+```{r}
+duniform <- function(x, a = 0, b = 1) {
+  ifelse(x >= a & x <= b, 1 / (b - a), 0)
+}
+duniform(0.5)
+duniform(-1)
+duniform(2)
+data.frame(x = seq(-1, 2, by = 0.001)) %>%
+  mutate(y = duniform(x)) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_step() +
+  labs(
+    title = "Uniform Density on (0, 1)",
+    x = "x",
+    y = "Density"
+  )
+```
+
+
+Exercise 3
+
+a) 
+```{r}
+standardize <- function(x) {
+  (x - mean(x)) / sd(x)
+}
+values <- c(10, 20, 30, 40, 50)
+
+standardize(values)
+```
+
+b) 
+```{r}
+library(dplyr)
+library(ggplot2)
+
+data("iris")
+```
+
+```{r}
+ggplot(iris, aes(
+  x = Sepal.Length,
+  y = Sepal.Width,
+  color = Species
+)) +
+  geom_point() +
+  labs(title = "Pre-Transformation")
+```
+
+
+# Standardize all of the numeric columns
+# across() selects columns and applies a function to them
+# there column select requires a dplyr column select command such
+# as starts_with(), contains(), or where().  The where() command
+# allows us to use some logical function on the column to decide
+# if the function should be applied or not.
+
+
+```{r}
+iris.z <- iris %>%
+  mutate(across(where(is.numeric), standardize))
+```
+
+# Graph the post-transformed data.
+
+```{r}
+ggplot(iris.z, aes(
+  x = Sepal.Length,
+  y = Sepal.Width,
+  color = Species
+)) +
+  geom_point() +
+  labs(title = "Post-Transformation")
+```
+
+Exercise 4
+
+```{r}
+fizzbuzz <- function(n) {
+  output <- character(n)
+
+  for (i in 1:n) {
+    if (i %% 15 == 0) {
+      output[i] <- "Fizz-Buzz"
+    } else if (i %% 3 == 0) {
+      output[i] <- "Fizz"
+    } else if (i %% 5 == 0) {
+      output[i] <- "Buzz"
+    } else {
+      output[i] <- as.character(i)
+    }
+  }
+
+  return(output)
+}
+fizzbuzz(15)
+```
+
